@@ -1,10 +1,11 @@
 package objectexplorer;
 
-import com.google.common.base.Preconditions;
 import java.lang.reflect.Field;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.Objects;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -24,7 +25,7 @@ public abstract class Chain {
   }
 
   static Chain root(Object value) {
-    return new Chain(null, Preconditions.checkNotNull(value)) {
+    return new Chain(null, Objects.requireNonNull(value)) {
       @Override
       public Class<?> getValueType() {
         return getValue().getClass();
@@ -33,7 +34,7 @@ public abstract class Chain {
   }
 
   FieldChain appendField(Field field, Object value) {
-    return new FieldChain(this, Preconditions.checkNotNull(field), value);
+    return new FieldChain(this, Objects.requireNonNull(field), value);
   }
 
   ArrayIndexChain appendArrayIndex(int arrayIndex, Object value) {
@@ -53,7 +54,9 @@ public abstract class Chain {
    * @throws IllegalStateException if {@code !hasParent()}, then an
    */
   public @Nonnull Chain getParent() {
-    Preconditions.checkState(parent != null, "This is the root value, it has no parent");
+    if (parent == null) {
+       throw new IllegalStateException("This is the root value, it has no parent");
+    }
     return parent;
   }
 

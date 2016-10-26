@@ -1,6 +1,7 @@
 package memorymeasurer;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -43,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -58,6 +60,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import objectexplorer.MemoryMeasurer;
@@ -273,12 +276,12 @@ public class ElementCostOfDataStructures {
         populator.getEntryType()));
 
     Object collection1 = populator.construct(initialEntries);
-    Footprint footprint1 = ObjectGraphMeasurer.measure(collection1, predicate);
-    long bytes1 = MemoryMeasurer.measureBytes(collection1, predicate);
+    Footprint footprint1 = ObjectGraphMeasurer.measure(collection1, predicate::apply);
+    long bytes1 = MemoryMeasurer.measureBytes(collection1, predicate::apply);
 
     Object collection2 = populator.construct(initialEntries + entriesToAdd);
-    Footprint footprint2 = ObjectGraphMeasurer.measure(collection2, predicate);
-    long bytes2 = MemoryMeasurer.measureBytes(collection2, predicate);
+    Footprint footprint2 = ObjectGraphMeasurer.measure(collection2, predicate::apply);
+    long bytes2 = MemoryMeasurer.measureBytes(collection2, predicate::apply);
 
     double objects = (footprint2.getObjects() - footprint1.getObjects()) / (double) entriesToAdd;
     double refs = (footprint2.getReferences() - footprint1.getReferences()) / (double) entriesToAdd;
@@ -286,8 +289,8 @@ public class ElementCostOfDataStructures {
 
     Map<Class<?>, Double> primitives = Maps.newHashMap();
     for (Class<?> primitiveType : primitiveTypes) {
-      int initial = footprint1.getPrimitives().count(primitiveType);
-      int ending = footprint2.getPrimitives().count(primitiveType);
+      int initial = footprint1.getPrimitives().stream().filter(t->Objects.equal(t, primitiveType)).findFirst().map(Entry::getValue).map(AtomicInteger::intValue).orElse(0);
+      int ending = footprint2.getPrimitives().stream().filter(t->Objects.equal(t, primitiveType)).findFirst().map(Entry::getValue).map(AtomicInteger::intValue).orElse(0);
       if (initial != ending) {
         primitives.put(primitiveType, (ending - initial) / (double) entriesToAdd);
       }

@@ -1,6 +1,5 @@
 package objectexplorer;
 
-import com.google.common.base.Preconditions;
 import java.lang.instrument.Instrumentation;
 
 /**
@@ -17,10 +16,12 @@ public class InstrumentationGrabber {
     }
 
     private static void checkSetup() {
-        Preconditions.checkState(instrumentation != null, "Instrumentation is not setup properly. "
-                + "You have to pass -javaagent:path/to/object-explorer.jar to the java interpreter");
+      if (instrumentation == null) {
+        throw new IllegalStateException("Instrumentation is not setup properly. "
+            + "You have to pass -javaagent:path/to/object-explorer.jar to the java interpreter");
+      }
     }
-
+    
     static Instrumentation instrumentation() {
         checkSetup();
         return instrumentation;
